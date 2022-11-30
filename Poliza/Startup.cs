@@ -10,11 +10,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Identity.Web;
+using Poliza.DataAccess.DataService;
+using Poliza.DataAccess.Interfaces;
+using Poliza.DataAccess.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Poliza
 {
     public class Startup
     {
+        private const string ConnectionStringDbContext = "ConnectionStrings:Default";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -26,6 +33,14 @@ namespace Poliza
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddMicrosoftIdentityWebApiAuthentication(Configuration);
+
+            services.AddScoped<IPolicyDataService, PolicyDataService>();
+
+            services.AddDbContext<PolizaContext>(options =>
+            {
+                options.UseSqlServer(Configuration[ConnectionStringDbContext]);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -39,7 +54,7 @@ namespace Poliza
             app.UseHttpsRedirection();
 
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
